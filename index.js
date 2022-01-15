@@ -14,7 +14,7 @@ app.get("/productos", (req, res, next)=>{
 })
 
 app.get("/productoRandom", (req, res, next)=>{
-    console.log(res)
+    console.log(res) 
     res.json(contenedor.getByIdRandom());
 })
 
