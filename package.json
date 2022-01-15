@@ -1,0 +1,24 @@
+{
+  "name": "servidorexpress",
+  "version": "1.0.0",
+  "description": "Servidor con Express",
+  "main": "index.js",
+  "type": "commonjs",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon index.js",
+    "start": "node index.js"
+  },
+  "keywords": [
+    "npm",
+    "express"
+  ],
+  "author": "Facundo Pascale",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.2"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.15"
+  }
+}
