@@ -1,25 +1,21 @@
-const Contenedor = require('./productClass')
+// GET /api/productos => devuelve todos los productos
+// GET /api/productos/:id => devuelve un producto segun su id
+// POST /api/productos => recibe y agrega un producto, y lo devuelve con su id asignado
+// PUT /api/productos/:id => recibe y actualiza un producto segun su id
+// DELETE /api/productos/:id => elimina un producto segun su id
+
 const express = require("express");
 const app = express();
-const PORT = 3000;
+const PORT = 8080;
+const router = require('./routes')
 
-let contenedor = new Contenedor('./bd.txt')
+app.use(express.static('public'))
+app.use(express.json())
+app.use(express.urlencoded({extended: true}))
+app.use('/api', router)
 
-app.get("/", (req, res, next)=>{
-    res.send(`<h1 style="color:blue">Hola, bienvenidos a mi servidor</h1>`);
-})
-
-app.get("/productos", (req, res, next)=>{
-    res.json(contenedor.getAll());
-})
-
-app.get("/productoRandom", (req, res, next)=>{
-    console.log(res) 
-    res.json(contenedor.getByIdRandom());
-})
-
-const server = app.listen(PORT, ()=>{
-    console.log(`Server on http://localhost:${PORT}`);
+const server = app.listen(PORT, () => {
+    console.log(`Server on http://localhost:${server.address().port}`);
 })
 
 server.on("error", error => console.log(error))

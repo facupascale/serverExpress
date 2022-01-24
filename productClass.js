@@ -1,41 +1,54 @@
-const fs = require('fs')
+//const fs = require('fs')
+
+class Producto {
+	constructor(title, price) {
+		this.title = title
+		this.price = price
+	}
+}
+
 
 class Contenedor {
-	constructor(file = '') {
+	constructor(file = '', productos = []) {
 		this.file = file
+		this.productos = productos
+	}
 
-		try {
-			this.personas = fs.readFileSync(this.file, 'utf-8')
-			this.personas = JSON.parse(this.personas)
-		} catch (err) {
-			this.personas = []
+	getAll() {
+		return this.productos
+	}
+
+	getById(id) {
+		let findProduct = this.productos.find((prod) => prod.id == id)
+		if (findProduct === undefined) {
+			return {error: 'Producto no encontrado'}
+		} else {
+			return findProduct
 		}
 	}
 
-    getAll() {
-        return this.personas
-    }
+	postById(title, price) {
+		let newProduct = new Producto(title, price)
+		this.productos.push(newProduct)
+		newProduct.id = this.productos.length + 1
+		return newProduct
+	}
 
-	getByIdRandom() {
-        let idRandom = Math.floor(Math.random() * ((3 + 1) - 1) + 1)
-		let persona = this.personas
-		for (let i = 0; i < persona.length; i++) {
-			if(persona[i].id === idRandom){
-				return persona[i]
-			}
+	actualiceById(title, price, id) {
+		const index = this.productos.findIndex((prod) => prod.id == id)
+		this.productos[index] = {
+			title: title,
+			price: price,
+			id: id,
 		}
+		return this.productos[index]
+	}
+
+	deleteById(id) {
+		const productos = this.productos.filter((prod) => prod.id != id)
+		this.productos = productos
 	}
 
 }
 
 module.exports = Contenedor
-
-//prueba.save('facundo', 'pascale')
-//prueba.save('ailen', 'pascale')
-//prueba.save('vico', 'pascale')
-//prueba.getById(3)
-//prueba.getById(5)
-//prueba.getById(20)
-//prueba.getAll()
-//prueba.deletedById(1)
-//prueba.deleteAll()
