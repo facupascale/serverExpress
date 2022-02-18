@@ -1,0 +1,64 @@
+<div class="container_chat_global">
+    <h2>Mi chat</h2>
+    <div class="container_chat">
+        <div>
+            <div class="chat">
+                <form id="data_user">
+                    <input id="email" type="text" name="email" placeholder="Ingresa tu email">
+                    <input id="user_name" type="text" name="user" placeholder="Ingresa tu usuario">
+                    <input id="mensaje" type="text" name="message" placeholder="Ingresa tu mensaje">
+                    <input type="submit" value="Enviar">
+                </form>
+            </div>
+            <p id="parrafo"></p>
+        </div>
+    </div>
+</div>
+</div >
+<script>    
+    let form_data_user = document.getElementById("data_user");
+    form_data_user.addEventListener("submit", e =>{
+        e.preventDefault();
+        console.log(e.target[0].value,e.target[1].value, e.target[2].value )
+        let student = {
+            email: e.target[0].value,
+            user: e.target[1].value,
+            message: e.target[2].value
+        }
+        if(student.email == "" || student.user == "" || student.message == "") window.location.reload();
+        socket.emit("from_front", student);
+    })
+
+    socket.on("fill_message", data =>{
+        fill_message(data);
+    });
+
+    socket.on("error", data =>{
+        alert(data);
+    });
+
+    socket.on("init", data =>{
+        console.log(data);
+        if(data.length > 0 ){
+            fill_message(data.students);
+            fill_users(data.users);
+        }
+    });
+
+    function fill_message(data){
+        let sms_html = ``;
+        for (const sms of data) {
+            sms_html += `<b>${sms.user}:</b> <span>${sms.message}</span> <i>${sms.date}</i><br>`;
+        }
+        parrafo.innerHTML = sms_html;
+    }
+    function fill_users(data){
+        let sms_html = ``;
+        for (const sms of data) {
+            sms_html += `<li>
+                            <span class="${sms.state}"></span> <h6>${sms.user}</h6>
+                        </li>`;
+        }
+        user_list.innerHTML = sms_html;
+    }
+</script>

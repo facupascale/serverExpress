@@ -4,10 +4,39 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Chat y motores de plantillas</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
         integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-
+    <script src="./socket.io/socket.io.js"></script>
+    <style>
+        p>i{
+            color: #74af30;
+            font-size: 9pt;
+        }
+        .card{
+            border-radius: 4px;
+            background: #fff;
+            box-shadow: 0 6px 10px rgb(0 0 0 / 8%), 0 0 6px rgb(0 0 0 / 5%);
+            transition: .3s transform cubic-bezier(.155,1.105,.295,1.12),.3s box-shadow,.3s -webkit-transform cubic-bezier(.155,1.105,.295,1.12);
+            padding: 14px 40px 18px 36px;
+            cursor: pointer;
+            width: 250px;
+        }
+        .card:hover{
+            transform: scale(1.05);
+        box-shadow: 0 10px 20px rgba(0,0,0,.12), 0 4px 8px rgba(0,0,0,.06);
+        }
+        .container_chat_global{
+            margin: 50px auto 0px;
+            width: 100%;
+            max-width: 800px;
+        }
+        .container_chat{
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+    </style>
 </head>
 <body>
     <div style="max-width:600px; margin:40px auto 0px;">

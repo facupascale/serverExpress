@@ -1,9 +1,53 @@
-<h1>Ingrese Datos porfa</h1>
-<form class="prod-form" id="add" action="/personas" method="POST">
-    <div class="d-flex flex-column align-items-center">
-        <input type="text" name="name" class="form-control" placeholder="Nombre" style="margin-bottom: 10px;">
-        <input type="text" name="lastname" class="form-control" placeholder="Apellido" style="margin-bottom: 10px;">
-        <input type="number" name="age" class="form-control" style="margin-bottom: 10px;">
-        <button type="submit" class="btn btn-primary">Ingresar estudiante</button>
-    </div>
-</form>
+<h1>Ingrese Datos del prducto</h1>
+<form class="prod-form" id="addProduct" >
+        <input id='name' type="text" name="name" class="form-control" placeholder="Nombre" style="margin-bottom: 10px;">
+        <input id='price' type="number" name="price" class="form-control" placeholder="Price" style="margin-bottom: 10px;">
+        <input id='pic' type="text" name="Foto Url" class="form-control" style="margin-bottom: 10px;">
+        <input type="submit" value='Enviar'/>
+    </form>
+    <br/>
+    <table class="table table-dark table-hover table-responsive">
+        <thead>
+            <tr>
+                <th scope="col">Nombre</th>
+                <th scope="col">Precio</th>
+                <th scope="col">Foto Url</th>
+            </tr>
+        </thead>
+        <tbody id="info">
+        </tbody>
+    </table>
+
+<script>
+    let socket = new io();
+    let form_product = document.getElementById('addProduct')
+    form_product.addEventListener("submit", e => {
+        e.preventDefault();
+        let prod = {
+            name: e.target[0].value,
+            price: e.target[1].value,
+            picUrl: e.target[2].value
+        }
+        if(prod.name == '' || prod.price == '' || prod.picUrl == '') window.location.reload();
+        console.log('hola')
+        socket.emit('from_product', prod);
+    })
+
+    socket.on('fill_product', data => {
+        fill_product(data);
+    })
+
+    socket.on('productsInit', data => {
+        if(data.length > 0 ) { 
+            fill_product(data)
+        }
+    })
+
+    function fill_product(data){
+        let prod_html = ``;
+        for (const prod of data) {
+            prod_html += `<tr><td scope='row'>${prod.name}</td> <td>${prod.price}</td> <td><img src=${prod.picUrl} width=100px height=100px class='rounded-circle img-thumbnail'></td></tr>`;
+        }
+        info.innerHTML = prod_html; 
+    }
+</script>
