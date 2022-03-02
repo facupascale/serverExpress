@@ -29,7 +29,6 @@
             picUrl: e.target[2].value
         }
         if(prod.name == '' || prod.price == '' || prod.picUrl == '') window.location.reload();
-        console.log('hola')
         socket.emit('from_product', prod);
     })
 
