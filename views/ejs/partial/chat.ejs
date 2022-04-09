@@ -5,7 +5,11 @@
             <div class="chat">
                 <form id="data_user">
                     <input id="email" type="text" name="email" placeholder="Ingresa tu email">
-                    <input id="user_name" type="text" name="user" placeholder="Ingresa tu usuario">
+                    <input id="alias" type="text" name="alias" placeholder="Ingresa tu alias">
+                    <input id="nombre" type="text" name="nombre" placeholder="Ingresa tu nombre">
+                    <input id="apellido" type="text" name="apellido" placeholder="Ingresa tu apellido">
+                    <input id="edad" type="number" name="edad" placeholder="Ingresa tu edad">
+                    <input id="avatar" type="text" name="avatar" placeholder="Ingresa tu url de tu avatar">
                     <input id="mensaje" type="text" name="message" placeholder="Ingresa tu mensaje">
                     <input type="submit" value="Enviar">
                 </form>
@@ -15,22 +19,27 @@
     </div>
 </div>
 </div >
-<script>    
+<script>
+
     let form_data_user = document.getElementById("data_user");
     form_data_user.addEventListener("submit", e =>{
         e.preventDefault();
-        console.log(e.target[0].value,e.target[1].value, e.target[2].value )
         let student = {
             email: e.target[0].value,
-            user: e.target[1].value,
-            message: e.target[2].value
+            alias: e.target[1].value,
+            nombre: e.target[2].value,
+            apellido: e.target[3].value,
+            edad: e.target[4].value,
+            avatar: e.target[5].value,
+            mensaje: e.target[6].value,
         }
         if(student.email == "" || student.user == "" || student.message == "") window.location.reload();
         socket.emit("from_front", student);
     })
 
-    socket.on("fill_message", data =>{
-        fill_message(data);
+    socket.on("fill_message", result =>{
+        console.log(result, 'soy result')
+        fill_message(result);
     });
 
     socket.on("error", data =>{
@@ -38,17 +47,17 @@
     });
 
     socket.on("init", data =>{
-        console.log(data);
         if(data.length > 0 ){
-            fill_message(data.students);
+            //fill_message(data.students);
             fill_users(data.users);
         }
     });
 
     function fill_message(data){
         let sms_html = ``;
-        for (const sms of data) {
-            sms_html += `<b>${sms.user}:</b> <span>${sms.message}</span> <i>${sms.date}</i><br>`;
+        for (const post of data) {
+            console.log(post, 'soy message')
+            sms_html += `<b>${post.author[0].alias}:</b> <span>${post.posts.mensajes[0].mensajes}</span> <i>${post.author[0].nombre}</i><br>`;
         }
         parrafo.innerHTML = sms_html;
     }

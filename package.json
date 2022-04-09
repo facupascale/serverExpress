@@ -17,11 +17,15 @@
   "author": "Facundo Pascale",
   "license": "ISC",
   "dependencies": {
+    "@faker-js/faker": "^6.1.2",
+    "dotenv": "^16.0.0",
     "ejs": "^3.1.6",
     "express": "^4.17.2",
     "knex": "^0.95.15",
     "moment": "^2.29.1",
+    "mongoose": "^6.2.10",
     "mysql": "^2.18.1",
+    "normalizr": "^3.6.2",
     "pg": "^8.7.3",
     "socket.io": "^4.4.1",
     "sqlite3": "^5.0.2"

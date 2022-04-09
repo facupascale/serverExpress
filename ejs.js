@@ -1,13 +1,15 @@
 const express = require('express')
 const app = express()
-const moment = require('moment')
 let {Server: HttpServer} = require('http')
 let {Server: SocketIO} = require('socket.io')
 const PORT = 3000
+//faker js
+const {faker} = require('@faker-js/faker')
 
 // persistencia de datos con mariaDB
 const { options } = require('./options/mariaDB.js')
 const knex = require('knex')(options);
+
 // persistencia de datos con sqlite3
 const knexSqlite3 = require('knex')({
     client: 'sqlite3',
@@ -15,6 +17,9 @@ const knexSqlite3 = require('knex')({
     useNullAsDefault: true
 })
 
+// persistencia de datos con MONGO
+const {ContenedorMongo} = require('./database/messagesMongoDB')
+let contenedor = new ContenedorMongo()
 
 app.use(express.json())
 app.use(express.urlencoded({extended: true}))
@@ -26,10 +31,16 @@ app.get('/', (req, res, next) => {
     res.render('index')
 })
 
-/* app.post('/personas', (req, res, next) => {
-    personas.push(req.body)
-    res.redirect('/')
-}) */
+app.get('/products-test', (req, res, next) => {
+    let products = [
+        {name: faker.commerce.productName(), price: faker.commerce.price(), fotoUrl: faker.image.imageUrl()},
+        {name: faker.commerce.productName(), price: faker.commerce.price(), fotoUrl: faker.image.imageUrl()},
+        {name: faker.commerce.productName(), price: faker.commerce.price(), fotoUrl: faker.image.imageUrl()},
+        {name: faker.commerce.productName(), price: faker.commerce.price(), fotoUrl: faker.image.imageUrl()},
+        {name: faker.commerce.productName(), price: faker.commerce.price(), fotoUrl: faker.image.imageUrl()},
+    ]
+    res.render('products-test', {products: products})
+}) 
 
 let http = new HttpServer(app)
 let io = new SocketIO(http)
@@ -63,58 +74,29 @@ io.on('connection', socket => {
 
     // chat
     socket.emit('init', {students})
-    socket.on('from_front', data => {
-        //let lengthUser = false;
-        //if(students.length > 0 ) lengthUser = false;
-        // if(lengthUser) {
-        //     let tableExist = knexSqlite3.schema.hasTable('students')
-        //     console.log(tableExist, 'soy table')
-        //     if(!tableExist) { 
-        //         knexSqlite3.schema.createTable('students', table => {
-        //             table.string("id")
-        //             table.string("email")
-        //             table.string("user")
-        //             table.string("message")
-        //             table.string("date")
-        //         })
-        //     } else {
-        //         console.log('Esta tabla existe')
-        //     }
-        //     if(auth(data, socket.id)) {
-        //         students.push({...data, id: socket.id, date: moment().format('HH:mm DD-MM-YYYY')});
-        //         knexSqlite3.from('students').insert(students)
-        //             .then(() => console.log('Estudiante agregado'))
-        //             .catch((err) => {console.log(err); throw err})
-        //         students = []
-        //         knexSqlite3.from('students').select('*')
-        //             .then(data => io.sockets.emit('fill_message', data))
-        //             .catch((err) => {console.log(err); throw err})
-            
-        //     } else {
-        //         socket.emit('error', `El usuario ${data.email} ya esta en uso`);
-        //     }
-        // } else {
-            let tableExist = knexSqlite3.schema.hasTable('students')
-            if(!tableExist) { 
-                knexSqlite3.schema.createTable('students', table => {
-                    table.string("id")
-                    table.string("email")
-                    table.string("user")
-                    table.string("message")
-                    table.string("date")
-                })
-                .then(() => console.log('se creo correctamente'))
-            } else {
-                console.log('Esta tabla existe')
-            }
-            students.push({...data, id: socket.id, date: moment().format('HH:mm DD-MM-YYYY')})
-            knexSqlite3.from('students').insert(students)
-                .then(() => console.log('Estudiante agregado'))
-                .catch((err) => {console.log(err); throw err})
-            students = []
-            knexSqlite3.from('students').select('*')
-                .then(data => io.sockets.emit('fill_message', data))
-                .catch((err) => {console.log(err); throw err})
+    socket.on('from_front', async data => {
+        console.table(data)
+                let student = {
+                    id: socket.id,
+                    author: [
+                        {
+                            id: data.email,
+                            nombre: data.nombre,
+                            apellido: data.apellido,
+                            edad: data.edad,
+                            alias: data.alias,
+                            avatar: data.avatar
+                        },
+                    ],
+                    posts: {
+                        mensajes: [
+                            {id: 'mensajes', mensajes: data.mensaje}
+                        ]
+                    }
+                }
+                await contenedor.postAdd(student)
+                const result = await contenedor.getAll()
+                io.sockets.emit('fill_message', result)
         }
     )
 })
