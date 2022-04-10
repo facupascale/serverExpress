@@ -1,8 +1,12 @@
 const express = require('express')
 const app = express()
+const cookieParser = require('cookie-parser')
+const session = require('express-session')
+
 let {Server: HttpServer} = require('http')
 let {Server: SocketIO} = require('socket.io')
 const PORT = 3000
+
 //faker js
 const {faker} = require('@faker-js/faker')
 
@@ -21,8 +25,11 @@ const knexSqlite3 = require('knex')({
 const {ContenedorMongo} = require('./database/messagesMongoDB')
 let contenedor = new ContenedorMongo()
 
+
+
 app.use(express.json())
 app.use(express.urlencoded({extended: true}))
+
 
 app.set('view engine', 'ejs')
 app.set('views', './views/ejs')
@@ -31,6 +38,7 @@ app.get('/', (req, res, next) => {
     res.render('index')
 })
 
+// ------------------------- FAKER ---------------------------------
 app.get('/products-test', (req, res, next) => {
     let products = [
         {name: faker.commerce.productName(), price: faker.commerce.price(), fotoUrl: faker.image.imageUrl()},
@@ -41,7 +49,55 @@ app.get('/products-test', (req, res, next) => {
     ]
     res.render('products-test', {products: products})
 }) 
+// -----------------------------------------------------------------
 
+// ------------------------ MONGO SESSION --------------------------
+const MongoStore = require('connect-mongo')
+const advancedOptions = { useNewUrlParser: true, useUnifiedTopology: true }
+
+app.use(cookieParser())
+app.use(session({
+    store: MongoStore.create({ mongoUrl: 'mongodb+srv://facundo:facu2410@finalcoder.wazuo.mongodb.net/serverexpress?retryWrites=true&w=majority', mongoOptions: advancedOptions }),
+    secret: 'sh',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        maxAge: 100000
+        } 
+    
+}))
+// -----------------------------------------------------------------
+
+// ------------------ SESSIONS ------------------
+
+app.post('/login', (req, res, next) => {
+    req.session.user = {
+        username: req.body.username,
+        password: req.body.password,
+    }
+    req.session.save(err => {
+        if(err) {
+            console.log(err)
+        } else {
+            res.status(200).send(req.session.user)
+        }
+    })
+})
+
+app.get('/end', (req, res, next) => {
+    req.session.destroy(err => {
+        if(err) {
+            console.log(err)
+        } else {
+            res.status(200).send('session destroyed')
+        }
+    })
+})
+
+// ---------------------------------------------------
+
+
+// ------------------------- SOCKET productos => MARIADB, chat => MONGODB  -------------------------
 let http = new HttpServer(app)
 let io = new SocketIO(http)
 let students = []
@@ -101,22 +157,9 @@ io.on('connection', socket => {
     )
 })
 
-const auth = (data, socket_id) => { 
-    let estudiante = students.find(st => st.id === socket_id);
-    if(!estudiante) return false
-    
-    let email = students.find(st => st.email == data.email)
-    if(!email) return false
-
-    return true
-}
+// ---------------------------------------------------
 
 http.listen(PORT, err => {
     console.log(`Server on http://localhost:${PORT}`)
 })
 
-/* const server = app.listen(PORT, () => {
-    console.log(`Server on http://localhost:${server.address().port}`);
-}) */
-
-// server.on("error", error => console.log(error))
