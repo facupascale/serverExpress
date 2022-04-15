@@ -2,10 +2,12 @@ const express = require('express')
 const app = express()
 const cookieParser = require('cookie-parser')
 const session = require('express-session')
-
 let {Server: HttpServer} = require('http')
 let {Server: SocketIO} = require('socket.io')
 const PORT = 3000
+const cors = require('cors')
+
+app.use(cors('*'))
 
 //faker js
 const {faker} = require('@faker-js/faker')
@@ -25,8 +27,26 @@ const knexSqlite3 = require('knex')({
 const {ContenedorMongo} = require('./database/messagesMongoDB')
 let contenedor = new ContenedorMongo()
 
+// Inicio de sesion con passport y passport-facebook
+const passport = require('passport')
+const FacebookStrategy = require('passport-facebook').Strategy
 
+passport.use(new FacebookStrategy({
+        clientID: '1109957979550535',
+        clientSecret: 'fbbba54e037299cf10268200917f1351',
+        callbackUrl: '/auth/facebook/callback'
+    },
+        function(accesToken, refreshToken, profile, done) {
+            User.findOrCreate(profile.id, function(err, user) {
+                if(err) return done(err);
+                done(null, user);
+            })
+        }
+))
 
+app.get('/auth/facebook', passport.authenticate('facebook'))
+app.get('/auth/facebook/callback', passport.authenticate('facebook', {  succesRedirect: 'https://localhost:3000/products-test',
+                                                                        failureRedirect: 'https://localhost:3000/error'}))
 app.use(express.json())
 app.use(express.urlencoded({extended: true}))
 
@@ -34,8 +54,16 @@ app.use(express.urlencoded({extended: true}))
 app.set('view engine', 'ejs')
 app.set('views', './views/ejs')
 
-app.get('/', (req, res, next) => {
+app.get('/datos', (req, res, next) => {
     res.render('index')
+})
+
+app.get('/', (req, res, next) => {
+    res.redirect('/login')
+})
+
+app.get('/login', (req, res, next) => { 
+    res.render('login')
 })
 
 // ------------------------- FAKER ---------------------------------
@@ -70,7 +98,7 @@ app.use(session({
 
 // ------------------ SESSIONS ------------------
 
-app.post('/login', (req, res, next) => {
+app.post('/loginUsername', (req, res, next) => {
     req.session.user = {
         username: req.body.username,
         password: req.body.password,
