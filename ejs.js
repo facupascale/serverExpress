@@ -2,51 +2,30 @@ const express = require('express')
 const app = express()
 const cookieParser = require('cookie-parser')
 const session = require('express-session')
-let {Server: HttpServer} = require('http')
+const https = require('https')
 let {Server: SocketIO} = require('socket.io')
-const PORT = 3000
-const cors = require('cors')
+const PORT = 8080
+const fs = require('fs');
 
-app.use(cors('*'))
-
-//faker js
-const {faker} = require('@faker-js/faker')
-
-// persistencia de datos con mariaDB
+// ----------------- Persistencia con MARIADB -----------------
 const { options } = require('./options/mariaDB.js')
 const knex = require('knex')(options);
+// ------------------------------------------------------------
 
-// persistencia de datos con sqlite3
+// ----------------- Persistencia con SQLITE3 -----------------
 const knexSqlite3 = require('knex')({
     client: 'sqlite3',
     connection: { filename: './mydb.sqlite' },
     useNullAsDefault: true
 })
+// ------------------------------------------------------------
 
-// persistencia de datos con MONGO
+// ------------------ Persistencia con MONGODB ------------------
 const {ContenedorMongo} = require('./database/messagesMongoDB')
 let contenedor = new ContenedorMongo()
+// ------------------------------------------------------------
 
-// Inicio de sesion con passport y passport-facebook
-const passport = require('passport')
-const FacebookStrategy = require('passport-facebook').Strategy
 
-passport.use(new FacebookStrategy({
-        clientID: '1109957979550535',
-        clientSecret: 'fbbba54e037299cf10268200917f1351',
-        callbackUrl: '/auth/facebook/callback'
-    },
-        function(accesToken, refreshToken, profile, done) {
-            User.findOrCreate(profile.id, function(err, user) {
-                if(err) return done(err);
-                done(null, user);
-            })
-        }
-))
-
-app.get('/auth/facebook', passport.authenticate('facebook'))
-app.get('/auth/facebook/callback', passport.authenticate('facebook', {  succesRedirect: 'https://localhost:3000/products-test',
-                                                                        failureRedirect: 'https://localhost:3000/error'}))
 app.use(express.json())
 app.use(express.urlencoded({extended: true}))
 
@@ -67,6 +46,8 @@ app.get('/login', (req, res, next) => {
 })
 
 // ------------------------- FAKER ---------------------------------
+const {faker} = require('@faker-js/faker')
+
 app.get('/products-test', (req, res, next) => {
     let products = [
         {name: faker.commerce.productName(), price: faker.commerce.price(), fotoUrl: faker.image.imageUrl()},
@@ -90,11 +71,43 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     cookie: {
-        maxAge: 100000
+        httpOnly: false,
+        secure: true,
+        maxAge: 600 * 1000,
+        sameSite: 'none'
         } 
     
 }))
 // -----------------------------------------------------------------
+
+// ------------ PASSPORT & PASSPORT-FACEBOOK ------------
+const passport = require('passport')
+const FacebookStrategy = require('passport-facebook').Strategy
+
+app.use(passport.initialize());
+app.use(passport.session())
+
+passport.use(new FacebookStrategy({
+        clientID: '1109957979550535',
+        clientSecret: 'fbbba54e037299cf10268200917f1351',
+        callbackUrl: 'https://localhost:8080/auth/facebook/callback'
+    },
+        function(accesToken, refreshToken, profile, done) {
+            console.log(profile, 'soy profile')
+            User.findOrCreate(profile.id, function(err, user) {
+                if(err) return done(err);
+                done(null, user);
+            })
+        }
+))
+
+app.get('/auth/facebook', passport.authenticate('facebook'))
+app.get('/auth/facebook/callback', passport.authenticate('facebook', 
+            {   succesRedirect: 'products-test',
+                failureRedirect: 'error'
+            }))
+
+// --------------------------------------------------------
 
 // ------------------ SESSIONS ------------------
 
@@ -124,10 +137,17 @@ app.get('/end', (req, res, next) => {
 
 // ---------------------------------------------------
 
+// --------------------- Https ----------------------
+
+const httpsOptions = {
+    key: fs.readFileSync('./key.pem'),
+    cert: fs.readFileSync('./cert.pem')
+}
+
+const httpsServer = https.createServer(httpsOptions, app);
 
 // ------------------------- SOCKET productos => MARIADB, chat => MONGODB  -------------------------
-let http = new HttpServer(app)
-let io = new SocketIO(http)
+let io = new SocketIO(httpsServer)
 let students = []
 let products = []
 
@@ -185,9 +205,16 @@ io.on('connection', socket => {
     )
 })
 
-// ---------------------------------------------------
+const server = httpsServer.listen(PORT,'localhost', (err) => {
+    if (err) {
+        console.log("Error while starting server")
+    } else {
+        console.log(`Servidor https escuchando en el puerto ${server.address().port}
+                        Open link to https://localhost:${server.address().port}`)
+        }
+    }
+)
 
-http.listen(PORT, err => {
-    console.log(`Server on http://localhost:${PORT}`)
+server.on('error', error => {
+    console.log(error)
 })
-

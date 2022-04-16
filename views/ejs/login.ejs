@@ -22,33 +22,35 @@
         <form id="userName">
             <input type="submit" value="Logout">
         </form>
-        <button id='facebook'>Login with Facebook</button>
+        <a href='/auth/facebook'>Login with Facebook</a>
     </div>
 <script>
-    let facebookLogin = document.getElementById('facebook')
-    facebookLogin.addEventListener('click', function () {
-        loginFacebook()
-    })
-    const loginFacebook = async () => {
-        try {
-            const response = await fetch('http://localhost:3000/auth/facebook', {
-                method: 'GET',
-                mode:"cors",
-                headers: {
-                    'Allow-Control-Allow-Origin': '*'
-                }
-            })
-            const data = await response.json()
-            console.log(data, 'soy data')
-            if (data.success) {
-                alert('Login success')
-            } else {
-                alert(data.message)
-            }
-        } catch (error) {
-            console.log(error)
-        }
-    }
+    // let facebookLogin = document.getElementById('facebook')
+    // facebookLogin.addEventListener('click', function () {
+    //     loginFacebook()
+    // })
+    // const loginFacebook = async () => {
+    //     try {
+    //         const response = await fetch('/auth/facebook', {
+    //             method: 'GET',
+    //             credentials: 'include',
+    //             mode: 'cors',
+    //             headers: { 
+    //                 'Content-Type': 'application/json',
+    //                 "Access-Control-Allow-Origin": "*",
+    //             }
+    //         })
+    //         const data = await response.json()
+    //         console.log(data, 'soy data')
+    //         if (data.success) {
+    //             alert('Login success')
+    //         } else {
+    //             alert(data.message)
+    //         }
+    //     } catch (error) {
+    //         console.log(error)
+    //     }
+    // }
 
     let login_user = document.getElementById('login_user')
     login_user.addEventListener("submit", e => {
@@ -62,12 +64,9 @@
     })
     const login = async (user) => {
         try {
-            let response = await fetch('http://localhost:3000/loginUsername', {
+            let response = await fetch('https://localhost:3000/loginUsername', {
                 method: 'POST',
                 body: JSON.stringify(user),
-                headers: {
-                    'Content-Type': 'application/json'
-                }
             })
             if(response.status == 200) {
                 let data = await response.json()
@@ -82,12 +81,11 @@
     const logoutID = document.getElementById('userName')
     logoutID.addEventListener("submit", e => {
         e.preventDefault();
-        console.log('entre')
         logout()
     })
     const logout = async () => {
         try{
-            let response = await fetch('http://localhost:3000/end', {
+            let response = await fetch('https://localhost:3000/end', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
