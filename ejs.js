@@ -7,6 +7,14 @@ let {Server: SocketIO} = require('socket.io')
 const PORT = 8080
 const fs = require('fs');
 
+// --------------------- Https ----------------------
+const httpsOptions = {
+    key: fs.readFileSync('./key.pem'),
+    cert: fs.readFileSync('./cert.pem')
+}
+// --------------------------------------------------
+
+const httpsServer = https.createServer(httpsOptions, app);
 // ----------------- Persistencia con MARIADB -----------------
 const { options } = require('./options/mariaDB.js')
 const knex = require('knex')(options);
@@ -25,45 +33,24 @@ const {ContenedorMongo} = require('./database/messagesMongoDB')
 let contenedor = new ContenedorMongo()
 // ------------------------------------------------------------
 
-
-app.use(express.json())
-app.use(express.urlencoded({extended: true}))
-
-
-app.set('view engine', 'ejs')
-app.set('views', './views/ejs')
-
-app.get('/datos', (req, res, next) => {
-    res.render('index')
-})
-
-app.get('/', (req, res, next) => {
-    res.redirect('/login')
-})
-
-app.get('/login', (req, res, next) => { 
-    res.render('login')
-})
-
-// ------------------------- FAKER ---------------------------------
+// ------------ Faker -------------------
 const {faker} = require('@faker-js/faker')
+// --------------------------------------
 
-app.get('/products-test', (req, res, next) => {
-    let products = [
-        {name: faker.commerce.productName(), price: faker.commerce.price(), fotoUrl: faker.image.imageUrl()},
-        {name: faker.commerce.productName(), price: faker.commerce.price(), fotoUrl: faker.image.imageUrl()},
-        {name: faker.commerce.productName(), price: faker.commerce.price(), fotoUrl: faker.image.imageUrl()},
-        {name: faker.commerce.productName(), price: faker.commerce.price(), fotoUrl: faker.image.imageUrl()},
-        {name: faker.commerce.productName(), price: faker.commerce.price(), fotoUrl: faker.image.imageUrl()},
-    ]
-    res.render('products-test', {products: products})
-}) 
-// -----------------------------------------------------------------
-
-// ------------------------ MONGO SESSION --------------------------
+// ------------- MONGO SESSION -------------
 const MongoStore = require('connect-mongo')
 const advancedOptions = { useNewUrlParser: true, useUnifiedTopology: true }
+// ----------------------------------------- 
 
+// ------------------ PASSPORT Y PASSPORT-FACEBOOK --------------
+const passport = require('passport')
+const FacebookStrategy = require('passport-facebook').Strategy
+// --------------------------------------------------------------
+
+app.use(express.json()); 
+app.use(express.urlencoded({extended: true}))
+
+// ------------------------ MONGO SESSION --------------------------
 app.use(cookieParser())
 app.use(session({
     store: MongoStore.create({ mongoUrl: 'mongodb+srv://facundo:facu2410@finalcoder.wazuo.mongodb.net/serverexpress?retryWrites=true&w=majority', mongoOptions: advancedOptions }),
@@ -80,9 +67,21 @@ app.use(session({
 }))
 // -----------------------------------------------------------------
 
+app.set('view engine', 'ejs')
+app.set('views', './views/ejs')
+
+app.get('/datos', (req, res, next) => {
+    res.render('index')
+})
+
+app.get('/', (req, res, next) => {
+    res.redirect('/login')
+})
+
+app.get('/login', (req, res, next) => { 
+    res.render('login')
+})
 // ------------ PASSPORT & PASSPORT-FACEBOOK ------------
-const passport = require('passport')
-const FacebookStrategy = require('passport-facebook').Strategy
 
 app.use(passport.initialize());
 app.use(passport.session())
@@ -103,11 +102,25 @@ passport.use(new FacebookStrategy({
 
 app.get('/auth/facebook', passport.authenticate('facebook'))
 app.get('/auth/facebook/callback', passport.authenticate('facebook', 
-            {   succesRedirect: 'products-test',
-                failureRedirect: 'error'
+            {   succesRedirect: '/products-test',
+                failureRedirect: '/error'
             }))
 
 // --------------------------------------------------------
+
+// ------------------------- FAKER ---------------------------------
+
+app.get('/products-test', (req, res, next) => {
+    let products = [
+        {name: faker.commerce.productName(), price: faker.commerce.price(), fotoUrl: faker.image.imageUrl()},
+        {name: faker.commerce.productName(), price: faker.commerce.price(), fotoUrl: faker.image.imageUrl()},
+        {name: faker.commerce.productName(), price: faker.commerce.price(), fotoUrl: faker.image.imageUrl()},
+        {name: faker.commerce.productName(), price: faker.commerce.price(), fotoUrl: faker.image.imageUrl()},
+        {name: faker.commerce.productName(), price: faker.commerce.price(), fotoUrl: faker.image.imageUrl()},
+    ]
+    res.render('products-test', {products: products})
+}) 
+// -----------------------------------------------------------------
 
 // ------------------ SESSIONS ------------------
 
@@ -137,14 +150,6 @@ app.get('/end', (req, res, next) => {
 
 // ---------------------------------------------------
 
-// --------------------- Https ----------------------
-
-const httpsOptions = {
-    key: fs.readFileSync('./key.pem'),
-    cert: fs.readFileSync('./cert.pem')
-}
-
-const httpsServer = https.createServer(httpsOptions, app);
 
 // ------------------------- SOCKET productos => MARIADB, chat => MONGODB  -------------------------
 let io = new SocketIO(httpsServer)
